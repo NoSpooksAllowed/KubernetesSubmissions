@@ -14,4 +14,4 @@ spec:
     spec:
       containers:
         - name: hashgenerator
-          image: nomadxynta/log_output@sha256:1864655380a436dcc993bd773b3558bfc613f6fbadf4f6b6f987aa6cb6d92aa5 
+          image: nomadxynta/log_output:1.0
