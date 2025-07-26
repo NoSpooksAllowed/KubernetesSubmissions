@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hashgenerator-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hashgenerator
+  template:
+    metadata:
+      labels:
+        app: hashgenerator
+    spec:
+      containers:
+        - name: hashgenerator
+          image: nomadxynta/log_output:1864655380a436dcc993bd773b3558bfc613f6fbadf4f6b6f987aa6cb6d92aa5 
