@@ -14,7 +14,7 @@ WORKDIR /app
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/*.js ./ 
+COPY --from=builder /app/src ./src
 
 EXPOSE 3000
 
@@ -25,4 +25,4 @@ RUN adduser --system node-app \
 
 USER node-app
 
-CMD ["node", "index.js"]
+CMD ["node", "src/index.js"]
