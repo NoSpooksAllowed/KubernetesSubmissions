@@ -14,4 +14,4 @@ spec:
     spec:
       containers:
         - name: todo-app
-          image: nomadxynta/todo_app:1.0
+          image: nomadxynta/todo_app:2.0
