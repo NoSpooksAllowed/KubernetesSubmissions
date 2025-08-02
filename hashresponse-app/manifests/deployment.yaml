@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hashgenerator-dep
+  name: hashresponse-dep
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hashgenerator
+      app: hashresponse
   template:
     metadata:
       labels:
-        app: hashgenerator
+        app: hashresponse
     spec:
       containers:
-        - name: hashgenerator
-          image: nomadxynta/log_output:2.0
+        - name: hashresponse
+          image: nomadxynta/hashresponse_app:1.0
