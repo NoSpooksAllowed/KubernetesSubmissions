@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const express = require("express");
 
 /**
  * Generates a cryptographically secure random hash.
@@ -15,6 +16,38 @@ function generateRandomHash(length = 32, algorithm = "sha256") {
 }
 
 const randomHash = generateRandomHash();
+const port = process.env.PORT || 3000;
+
+// Create Express app
+const app = express();
+
+// Middleware
+app.use(express.json());
+
+// Status endpoint
+app.get("/status", (req, res) => {
+  const timestamp = new Date().toISOString();
+  res.json({
+    timestamp: timestamp,
+    randomString: randomHash,
+  });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({
+    message: "Log Output Application",
+    endpoints: {
+      status: "/status",
+    },
+  });
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+  console.log(`Status endpoint available at: http://localhost:${port}/status`);
+});
 
 const intervalId = setInterval(() => {
   const timestamp = new Date().toISOString();
