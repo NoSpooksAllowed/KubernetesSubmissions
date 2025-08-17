@@ -25,7 +25,8 @@ function writeToFile(randomString, filename = "output.log") {
   const timestamp = new Date().toISOString();
   const logEntry = `${timestamp} - ${randomString}\n`;
 
-  const logDir = "logs";
+  const logDir = path.join("/", "app", "logs");
+  console.log(logDir);
   const logFilePath = path.join(logDir, filename);
 
   if (!fs.existsSync(logDir)) {

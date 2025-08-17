@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const port = process.env.PORT || 3000;
-const logFilePath = path.join("logs", "output.log");
+const logFilePath = path.join("/", "app", "logs", "output.log");
 
 // Create Express app
 const app = express();
