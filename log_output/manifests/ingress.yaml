@@ -10,6 +10,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: hashgenerator-svc
+            name: images-svc
             port:
               number: 3000

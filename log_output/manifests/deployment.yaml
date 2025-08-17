@@ -1,17 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hashgenerator-dep
+  name: images-dep
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hashgenerator
+      app: images
   template:
     metadata:
       labels:
-        app: hashgenerator
+        app: images
     spec:
+      volumes: # Define volume
+        - name: shared-image
+          emptyDir: {}
       containers:
-        - name: hashgenerator
-          image: nomadxynta/log_output:3.0
+        - name: image-generate-output
+          image: nomadxynta/generate_output:3.0
+          volumeMounts: # Mount volume
+          - name: shared-image
+            mountPath: /app/logs
+        - name: image-get-output
+          image: nomadxynta/get_output:3.0
+          volumeMounts: # Mount volume
+          - name: shared-image
+            mountPath: /app/logs
