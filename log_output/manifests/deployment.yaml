@@ -12,9 +12,12 @@ spec:
       labels:
         app: images
     spec:
+      securityContext:
+        fsGroup: 1000
       volumes: # Define volume
         - name: shared-image
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: image-claim
       containers:
         - name: image-generate-output
           image: nomadxynta/generate_output:3.0
