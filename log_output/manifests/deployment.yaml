@@ -17,7 +17,7 @@ spec:
       volumes: # Define volume
         - name: shared-image
           persistentVolumeClaim:
-            claimName: image-claim
+            claimName: shared-pvc
       containers:
         - name: image-generate-output
           image: nomadxynta/generate_output:3.0
