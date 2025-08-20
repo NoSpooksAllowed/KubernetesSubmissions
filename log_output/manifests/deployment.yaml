@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: images-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: images
+  template:
+    metadata:
+      labels:
+        app: images
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes: # Define volume
+        - name: shared-image
+          persistentVolumeClaim:
+            claimName: shared-pvc
+      containers:
+        - name: image-generate-output
+          image: nomadxynta/generate_output:3.0
+          volumeMounts: # Mount volume
+          - name: shared-image
+            mountPath: /app/logs
+        - name: image-get-output
+          image: nomadxynta/get_output:3.0
+          volumeMounts: # Mount volume
+          - name: shared-image
+            mountPath: /app/logs
