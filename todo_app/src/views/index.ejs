@@ -34,11 +34,79 @@
     </div>
     <% } %>
     
+    <!-- Todo Section -->
+    <div class="todo-section">
+        <h2>Todo List 📝</h2>
+        
+        <!-- Todo Input Form -->
+        <div class="todo-input-container">
+            <form class="todo-form">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="todoInput" 
+                        placeholder="Enter your todo (max 140 characters)" 
+                        maxlength="140"
+                        class="todo-input"
+                    >
+                    <button type="submit" class="send-button">Send</button>
+                </div>
+                <div class="char-counter">
+                    <span id="charCount">0</span>/140 characters
+                </div>
+            </form>
+        </div>
+        
+        <!-- Todo List -->
+        <div class="todo-list">
+            <h3>Your Todos:</h3>
+            <ul class="todos">
+                <li class="todo-item">
+                    <span class="todo-text">Learn Docker</span>
+                    <button class="delete-btn">×</button>
+                </li>
+                <li class="todo-item">
+                    <span class="todo-text">Learn Kubernetes</span>
+                    <button class="delete-btn">×</button>
+                </li>
+                <li class="todo-item">
+                    <span class="todo-text">Learn Git</span>
+                    <button class="delete-btn">×</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
     <div class="port-info">
         <strong>Server Information:</strong><br>
         Port: <%= port %><br>
         Status: Running <span class="status-badge">✅</span>
     </div>
 </div>
+
+<script>
+// Character counter for todo input
+document.getElementById('todoInput').addEventListener('input', function() {
+    const charCount = this.value.length;
+    document.getElementById('charCount').textContent = charCount;
+    
+    // Change color when approaching limit
+    const counter = document.getElementById('charCount');
+    if (charCount > 120) {
+        counter.style.color = '#ff6b6b';
+    } else if (charCount > 100) {
+        counter.style.color = '#ffa726';
+    } else {
+        counter.style.color = '#666';
+    }
+});
+
+// Prevent form submission for now (as requested)
+document.querySelector('.todo-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Todo: Add actual todo submission logic here
+    console.log('Todo submission would happen here');
+});
+</script>
 
 <%- include('partials/footer') %> 
