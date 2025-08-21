@@ -12,6 +12,15 @@ spec:
       labels:
         app: todo-app
     spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: shared-todo-app
+          persistentVolumeClaim:
+            claimName: todo-app-pvc
       containers:
         - name: todo-app
-          image: nomadxynta/todo_app:2.0
+          image: nomadxynta/todo_app:3.0
+          volumeMounts:
+            - name: shared-todo-app
+              mountPath: /app/cache
