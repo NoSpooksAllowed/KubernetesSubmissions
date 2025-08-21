@@ -4,6 +4,36 @@
     <h1>Hello World! 🌍</h1>
     <p>Welcome to the Todo App</p>
     <p>This is a simple Express.js application running on port <%= port %></p>
+    
+    <% if (imageUrl) { %>
+    <div class="image-section">
+        <h2>Hourly Image 📸</h2>
+        <div class="image-container">
+            <img src="<%= imageUrl %>" alt="Random hourly image from Lorem Picsum" class="hourly-image">
+        </div>
+        <div class="image-info">
+            <p><strong>Image Status:</strong> 
+                <% if (isCached) { %>
+                    <span class="status-cached">✅ Cached</span>
+                <% } else { %>
+                    <span class="status-fresh">🔄 Fresh</span>
+                <% } %>
+            </p>
+            <% if (imageMetadata && imageMetadata.lastUpdated) { %>
+            <p><strong>Last Updated:</strong> <%= new Date(imageMetadata.lastUpdated).toLocaleString() %></p>
+            <p><strong>Next Refresh:</strong> <%= new Date(nextRefresh).toLocaleString() %></p>
+            <% } %>
+        </div>
+    </div>
+    <% } else { %>
+    <div class="image-section">
+        <h2>Hourly Image 📸</h2>
+        <div class="image-error">
+            <p>⚠️ Image temporarily unavailable</p>
+        </div>
+    </div>
+    <% } %>
+    
     <div class="port-info">
         <strong>Server Information:</strong><br>
         Port: <%= port %><br>

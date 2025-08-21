@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -22,6 +22,11 @@
         h1 {
             color: #333;
             margin-bottom: 20px;
+        }
+        h2 {
+            color: #444;
+            margin: 30px 0 20px 0;
+            font-size: 24px;
         }
         p {
             color: #666;
@@ -43,6 +48,80 @@
             border-radius: 4px;
             font-size: 12px;
             margin-left: 10px;
+        }
+        
+        /* Image section styles */
+        .image-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .image-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .hourly-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .hourly-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .image-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            text-align: left;
+            border-left: 4px solid #28a745;
+        }
+        
+        .image-info p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .status-cached {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .status-fresh {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        
+        .image-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #dc3545;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .hourly-image {
+                max-width: 90%;
+            }
+            
+            .image-info {
+                font-size: 12px;
+            }
         }
     </style>
 </head>
