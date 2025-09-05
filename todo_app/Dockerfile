@@ -10,10 +10,10 @@ COPY . .
 
 FROM node:20-slim
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-RUN adduser --system nodejs -u 101 \ 
-  && addgroup --system nodejs --gid 101 \
+RUN  addgroup --system nodejs --gid 101 \
+  adduser --system nodejs -u 101 --ingroup nodejs nodejs\
   && chown nodejs:nodejs .
 
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
