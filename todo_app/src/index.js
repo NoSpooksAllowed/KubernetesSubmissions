@@ -15,6 +15,10 @@ app.set("views", path.join(__dirname, "views"));
 // Serve the cache directory as static content
 app.use(express.static(path.join("/", "app", "cache")));
 
+// Middleware for parsing JSON bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Cache configuration
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 const CACHE_DIR = "/app/cache";
@@ -26,11 +30,15 @@ const METADATA_PATH = path.join(CACHE_DIR, METADATA_FILE);
 // The URL of the image to download
 const imageUrl = "https://picsum.photos/1200";
 
+// Todo backend configuration
+const TODO_BACKEND_URL =
+  process.env.TODO_BACKEND_URL || "http://todo-backend-svc:3002";
+
 // Load or create metadata
 function loadMetadata() {
   try {
     if (fs.existsSync(METADATA_PATH)) {
-      const data = fs.readFileSync(METADATA_PATH, 'utf8');
+      const data = fs.readFileSync(METADATA_PATH, "utf8");
       return JSON.parse(data);
     }
   } catch (error) {
@@ -85,26 +93,27 @@ async function getCachedImage() {
   const metadata = loadMetadata();
   const now = Date.now();
   const timeSinceUpdate = now - metadata.lastUpdated;
-  
+
   // Check if we need to refresh the image
-  const shouldRefresh = !fs.existsSync(IMAGE_PATH) || timeSinceUpdate >= CACHE_DURATION;
-  
+  const shouldRefresh =
+    !fs.existsSync(IMAGE_PATH) || timeSinceUpdate >= CACHE_DURATION;
+
   if (shouldRefresh) {
     try {
       // Generate a random image ID for consistent image during cache period
       const imageId = Math.floor(Math.random() * 1000);
       const randomImageUrl = `${imageUrl}?random=${imageId}`;
-      
+
       await downloadImageAndSave(randomImageUrl);
-      
+
       // Update metadata
       const newMetadata = {
         lastUpdated: now,
         imageId: imageId,
-        imageUrl: randomImageUrl
+        imageUrl: randomImageUrl,
       };
       saveMetadata(newMetadata);
-      
+
       console.log("Image cache refreshed successfully");
       return { isCached: false, metadata: newMetadata };
     } catch (error) {
@@ -117,20 +126,45 @@ async function getCachedImage() {
       throw error;
     }
   }
-  
+
   return { isCached: true, metadata: metadata };
+}
+
+// Create a new todo in backend
+async function createTodo(text) {
+  try {
+    const response = await axios.post(`${TODO_BACKEND_URL}/todos`, { text });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating todo in backend:", error.message);
+    throw error;
+  }
+}
+
+// Fetch todos from backend
+async function fetchTodos() {
+  try {
+    const response = await axios.get(`${TODO_BACKEND_URL}/todos`);
+    return response.data.todos || [];
+  } catch (error) {
+    console.error("Error fetching todos from backend:", error.message);
+    return [];
+  }
 }
 
 // Serve the cached image
 app.get("/image", async (req, res) => {
   try {
     const imageData = await getCachedImage();
-    
+
     if (fs.existsSync(IMAGE_PATH)) {
       // Set cache headers for browser caching
-      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes browser cache
-      res.setHeader('Last-Modified', new Date(imageData.metadata.lastUpdated).toUTCString());
-      
+      res.setHeader("Cache-Control", "public, max-age=300"); // 5 minutes browser cache
+      res.setHeader(
+        "Last-Modified",
+        new Date(imageData.metadata.lastUpdated).toUTCString(),
+      );
+
       res.sendFile(IMAGE_PATH);
     } else {
       res.status(404).json({ error: "Image not found" });
@@ -150,34 +184,70 @@ app.get("/image/metadata", async (req, res) => {
       imageId: imageData.metadata.imageId,
       isCached: imageData.isCached,
       nextRefresh: imageData.metadata.lastUpdated + CACHE_DURATION,
-      timeUntilRefresh: Math.max(0, (imageData.metadata.lastUpdated + CACHE_DURATION) - Date.now())
+      timeUntilRefresh: Math.max(
+        0,
+        imageData.metadata.lastUpdated + CACHE_DURATION - Date.now(),
+      ),
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to get image metadata" });
   }
 });
 
-// Home page with image display
+// Home page with image display and todos
 app.get("/", async (req, res) => {
   try {
     const imageData = await getCachedImage();
+    const todos = await fetchTodos();
+
     res.render("index", {
       title: "Todo App - Home",
       port: port,
       imageUrl: "/image",
       imageMetadata: imageData.metadata,
       isCached: imageData.isCached,
-      nextRefresh: imageData.metadata.lastUpdated + CACHE_DURATION
+      nextRefresh: imageData.metadata.lastUpdated + CACHE_DURATION,
+      todos: todos,
     });
   } catch (error) {
     console.error("Error in home controller:", error);
+    const todos = await fetchTodos(); // Still try to fetch todos even if image fails
+
     res.render("index", {
       title: "Todo App - Home",
       port: port,
       imageUrl: null,
       imageMetadata: null,
       isCached: false,
-      nextRefresh: null
+      nextRefresh: null,
+      todos: todos,
+    });
+  }
+});
+
+// Create a new todo
+app.post("/todos", async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({
+        error: "Todo text is required",
+      });
+    }
+
+    if (text.length > 140) {
+      return res.status(400).json({
+        error: "Todo text must be 140 characters or less",
+      });
+    }
+
+    const result = await createTodo(text.trim());
+    res.status(201).json(result);
+  } catch (error) {
+    console.error("Error creating todo:", error);
+    res.status(500).json({
+      error: "Failed to create todo",
     });
   }
 });
