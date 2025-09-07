@@ -10,6 +10,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: images-svc
+            name: get-output-svc
             port:
               number: 3000
