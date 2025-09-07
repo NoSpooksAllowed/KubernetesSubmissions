@@ -1,9 +1,24 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
+const crypto = require("crypto");
+const http = require("http");
 const port = process.env.PORT || 3000;
-const logFilePath = path.join("/", "app", "logs", "output.log");
+
+// Array to store generated hashes
+let hashLogs = [];
+
+/**
+ * Generates a cryptographically secure random hash.
+ * @param {number} [length=32] - The number of random bytes to generate (determines entropy).
+ * @param {string} [algorithm='sha256'] - The hashing algorithm to use (e.g., 'sha256', 'sha512').
+ * @returns {string} The generated hash as a hexadecimal string.
+ */
+function generateRandomHash(length = 32, algorithm = "sha256") {
+  const randomBytes = crypto.randomBytes(length);
+  const hash = crypto.createHash(algorithm);
+  hash.update(randomBytes);
+
+  return hash.digest("hex");
+}
 
 // Create Express app
 const app = express();
@@ -11,45 +26,21 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-/**
- * Reads the log file and returns its content.
- * @returns {string} The content of the log file.
- */
-function readLogFile() {
-  try {
-    if (fs.existsSync(logFilePath)) {
-      return fs.readFileSync(logFilePath, "utf8");
-    } else {
-      return "Log file not found. The generate_output application may not be running yet.";
-    }
-  } catch (error) {
-    return `Error reading log file: ${error.message}`;
-  }
-}
+// Removed readLogFile and getLogEntries functions as per request
 
-/**
- * Gets log entries as an array of objects.
- * @returns {Array} Array of log entries with timestamp and randomString properties.
- */
-function getLogEntries() {
-  const content = readLogFile();
-  if (content.includes("Error") || content.includes("not found")) {
-    return [];
-  }
+// Function to continuously generate and store hashes
+function startHashGeneration() {
+  setInterval(() => {
+    const timestamp = new Date().toISOString();
+    const hash = generateRandomHash();
+    const logEntry = {
+      timestamp: timestamp,
+      hash: hash,
+    };
 
-  const lines = content.trim().split("\n");
-  return lines
-    .map((line) => {
-      const parts = line.split(" - ");
-      if (parts.length === 2) {
-        return {
-          timestamp: parts[0],
-          randomString: parts[1],
-        };
-      }
-      return null;
-    })
-    .filter((entry) => entry !== null);
+    hashLogs.push(logEntry);
+    console.log(`Generated hash: ${hash} at ${timestamp}`);
+  }, 5000); // Generate every 5 seconds
 }
 
 // Root endpoint - shows available endpoints
@@ -59,59 +50,92 @@ app.get("/", (req, res) => {
     description:
       "Web service to read random string logs from generate_output application",
     endpoints: {
-      logs: "/logs - Get all log entries as text",
-      logsJson: "/logs/json - Get all log entries as JSON array",
-      latest: "/logs/latest - Get the latest log entry",
-      count: "/logs/count - Get the number of log entries",
+      logs: "/logs - Get all stored hashes",
+      logsJson: "/logs/json - Get all stored hashes as JSON array",
+      latest: "/logs/latest - Get the latest stored hash",
+      count: "/logs/count - Get the number of stored hashes",
     },
-    logFilePath: logFilePath,
+    totalHashes: hashLogs.length,
   });
 });
 
 // Get all logs as text
-app.get("/logs", (req, res) => {
-  const content = readLogFile();
-  res.set("Content-Type", "text/plain");
-  res.send(content);
+app.get("/logs", async (req, res) => {
+  try {
+    // Make HTTP request to pingpong app
+    const pingpongResponse = await new Promise((resolve, reject) => {
+      const request = http.get(
+        "http://pingpong-app-svc:3002/pings",
+        (response) => {
+          let data = "";
+          response.on("data", (chunk) => {
+            data += chunk;
+          });
+          response.on("end", () => {
+            resolve(data);
+          });
+        },
+      );
+
+      request.on("error", (error) => {
+        reject(error);
+      });
+    });
+
+    // Parse the pingpong response
+    const pingpongData = JSON.parse(pingpongResponse);
+
+    // Create logs text with hashLogs and pingpong data
+    const logsText = hashLogs
+      .map((entry) => `${entry.timestamp} - ${entry.hash}`)
+      .join("\n");
+    const combinedLogs =
+      logsText + "\n" + `Pingpong pings count: ${pingpongData.pings}`;
+
+    res.set("Content-Type", "text/plain");
+    res.send(combinedLogs || "No hashes generated yet");
+  } catch (error) {
+    console.error("Error fetching pingpong data:", error.message);
+    res.set("Content-Type", "text/plain");
+    const logsText = hashLogs
+      .map((entry) => `${entry.timestamp} - ${entry.hash}`)
+      .join("\n");
+    res.send(logsText || "No hashes generated yet");
+  }
 });
 
 // Get all logs as JSON
 app.get("/logs/json", (req, res) => {
-  const entries = getLogEntries();
   res.json({
-    count: entries.length,
-    entries: entries,
+    count: hashLogs.length,
+    entries: hashLogs,
   });
 });
 
 // Get latest log entry
 app.get("/logs/latest", (req, res) => {
-  const entries = getLogEntries();
-  if (entries.length > 0) {
-    res.json(entries[entries.length - 1]);
+  if (hashLogs.length > 0) {
+    res.json(hashLogs[hashLogs.length - 1]);
   } else {
     res.status(404).json({
-      error: "No log entries found",
+      error: "No hashes generated yet",
     });
   }
 });
 
 // Get count of log entries
 app.get("/logs/count", (req, res) => {
-  const entries = getLogEntries();
   res.json({
-    count: entries.length,
+    count: hashLogs.length,
   });
 });
 
 // Health check endpoint
 app.get("/health", (req, res) => {
-  const fileExists = fs.existsSync(logFilePath);
   res.json({
     status: "healthy",
     timestamp: new Date().toISOString(),
-    logFileExists: fileExists,
-    logFilePath: logFilePath,
+    totalHashes: hashLogs.length,
   });
 });
 
@@ -120,14 +144,17 @@ app.listen(port, () => {
   console.log(`Log reader service is running on port ${port}`);
   console.log(`Available endpoints:`);
   console.log(`  - http://localhost:${port}/ - Service info`);
-  console.log(`  - http://localhost:${port}/logs - Get all logs as text`);
-  console.log(`  - http://localhost:${port}/logs/json - Get all logs as JSON`);
+  console.log(`  - http://localhost:${port}/logs - Get all hashes as text`);
   console.log(
-    `  - http://localhost:${port}/logs/latest - Get latest log entry`,
+    `  - http://localhost:${port}/logs/json - Get all hashes as JSON`,
   );
-  console.log(`  - http://localhost:${port}/logs/count - Get log count`);
+  console.log(`  - http://localhost:${port}/logs/latest - Get latest hash`);
+  console.log(`  - http://localhost:${port}/logs/count - Get hash count`);
   console.log(`  - http://localhost:${port}/health - Health check`);
-  console.log(`Log file path: ${logFilePath}`);
+  console.log(`Starting automatic hash generation every 5 seconds...`);
+
+  // Start the automatic hash generation
+  startHashGeneration();
 });
 
 // Graceful shutdown handling
