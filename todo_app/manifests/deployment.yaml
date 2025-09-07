@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-app-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-app
+  template:
+    metadata:
+      labels:
+        app: todo-app
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+        - name: shared-todo-app
+          persistentVolumeClaim:
+            claimName: todo-app-pvc
+      containers:
+        - name: todo-app
+          image: nomadxynta/todo_app:5.0
+          volumeMounts:
+            - name: shared-todo-app
+              mountPath: /app/cache
