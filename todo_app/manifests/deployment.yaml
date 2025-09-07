@@ -20,7 +20,7 @@ spec:
             claimName: todo-app-pvc
       containers:
         - name: todo-app
-          image: nomadxynta/todo_app:4.0
+          image: nomadxynta/todo_app:5.0
           volumeMounts:
             - name: shared-todo-app
               mountPath: /app/cache
