@@ -13,3 +13,10 @@ spec:
             name: pingpong-app-svc
             port:
               number: 3002
+      - path: /pings
+        pathType: Prefix
+        backend:
+          service:
+            name: pingpong-app-svc
+            port:
+              number: 3002

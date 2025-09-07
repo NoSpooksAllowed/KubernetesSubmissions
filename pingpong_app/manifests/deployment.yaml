@@ -12,15 +12,6 @@ spec:
       labels:
         app: pingpong-app
     spec:
-      securityContext:
-        fsGroup: 1000
-      volumes: # Define volume
-        - name: shared-pingpong-app
-          persistentVolumeClaim:
-            claimName: shared-pvc
       containers:
         - name: pingpong-app
-          image: nomadxynta/pingpong_app:2.0
-          volumeMounts: # Mount volume
-          - name: shared-pingpong-app
-            mountPath: /app/logs
+          image: nomadxynta/pingpong_app:4.0
