@@ -21,7 +21,19 @@ spec:
             claimName: todo-app-pvc
       containers:
         - name: todo-app
-          image: nomadxynta/todo_app:5.0
+          image: nomadxynta/todo_app:6.0
           volumeMounts:
             - name: shared-todo-app
               mountPath: /app/cache
+          env:
+            - name: IMAGE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: image_url
+
+            - name: TODO_BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: project-config
+                  key: todo_backend_url

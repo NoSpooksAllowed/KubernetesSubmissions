@@ -28,11 +28,10 @@ const IMAGE_PATH = path.join(CACHE_DIR, IMAGE_FILE);
 const METADATA_PATH = path.join(CACHE_DIR, METADATA_FILE);
 
 // The URL of the image to download
-const imageUrl = "https://picsum.photos/1200";
+const imageUrl = process.env.IMAGE_URL;
 
 // Todo backend configuration
-const TODO_BACKEND_URL =
-  process.env.TODO_BACKEND_URL || "http://todo-backend-svc:3002";
+const TODO_BACKEND_URL = process.env.TODO_BACKEND_URL;
 
 // Load or create metadata
 function loadMetadata() {

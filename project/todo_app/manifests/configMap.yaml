@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: project-config
+data:
+  image_url: "https://picsum.photos/1200"
+  todo_backend_url: "http://todo-backend-svc:3002"
