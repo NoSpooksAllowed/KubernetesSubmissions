@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exercises-config
+data:
+  message: "hello world"
+
+  textfile: |
+    this text is from file
+  
+  pingpong_url: "http://pingpong-app-svc:3002/pings"

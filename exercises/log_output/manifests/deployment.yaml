@@ -15,4 +15,25 @@ spec:
     spec:
       containers:
         - name: get-output
-          image: nomadxynta/get_output:7.0
+          image: nomadxynta/get_output:12.0
+          volumeMounts:
+            - name: textfile-volume 
+              mountPath: /app/data
+          env:
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: exercises-config
+                  key: message
+            - name: PINGPONG_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: exercises-config
+                  key: pingpong_url
+      volumes:
+        - name: textfile-volume
+          configMap:
+            name: exercises-config
+            items:
+              - key: textfile
+                path: text_file.txt

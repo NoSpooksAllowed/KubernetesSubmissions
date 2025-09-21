@@ -1,6 +1,8 @@
 const express = require("express");
 const crypto = require("crypto");
 const http = require("http");
+const fs = require("node:fs/promises");
+
 const port = process.env.PORT || 3000;
 
 // Array to store generated hashes
@@ -64,18 +66,15 @@ app.get("/logs", async (req, res) => {
   try {
     // Make HTTP request to pingpong app
     const pingpongResponse = await new Promise((resolve, reject) => {
-      const request = http.get(
-        "http://pingpong-app-svc:3002/pings",
-        (response) => {
-          let data = "";
-          response.on("data", (chunk) => {
-            data += chunk;
-          });
-          response.on("end", () => {
-            resolve(data);
-          });
-        },
-      );
+      const request = http.get(process.env.PINGPONG_URL, (response) => {
+        let data = "";
+        response.on("data", (chunk) => {
+          data += chunk;
+        });
+        response.on("end", () => {
+          resolve(data);
+        });
+      });
 
       request.on("error", (error) => {
         reject(error);
@@ -84,23 +83,42 @@ app.get("/logs", async (req, res) => {
 
     // Parse the pingpong response
     const pingpongData = JSON.parse(pingpongResponse);
+    const fileData = await fs.readFile("data/text_file.txt", {
+      encoding: "utf8",
+    });
 
-    // Create logs text with hashLogs and pingpong data
+    console.log(fileData);
+    console.log(process.env.MESSAGE);
+
+    // Create logs text
     const logsText = hashLogs
       .map((entry) => `${entry.timestamp} - ${entry.hash}`)
       .join("\n");
+
+    // Create combined logs text with all data
     const combinedLogs =
-      logsText + "\n" + `Pingpong pings count: ${pingpongData.pings}`;
+      `File content:\n${fileData}\n\n` +
+      `Environment variable MESSAGE: ${process.env.MESSAGE}\n\n` +
+      `Hash logs:\n${logsText || "No hashes generated yet"}\n\n` +
+      `Pingpong pings count: ${pingpongData.pings}`;
 
     res.set("Content-Type", "text/plain");
-    res.send(combinedLogs || "No hashes generated yet");
+    res.send(combinedLogs);
   } catch (error) {
     console.error("Error fetching pingpong data:", error.message);
-    res.set("Content-Type", "text/plain");
     const logsText = hashLogs
       .map((entry) => `${entry.timestamp} - ${entry.hash}`)
       .join("\n");
-    res.send(logsText || "No hashes generated yet");
+
+    // Create combined logs text with available data
+    const combinedLogs =
+      `File content:\n${fileData || "Error reading file"}\n\n` +
+      `Environment variable MESSAGE: ${process.env.MESSAGE}\n\n` +
+      `Hash logs:\n${logsText || "No hashes generated yet"}\n\n` +
+      `Pingpong pings count: Error - ${error.message}`;
+
+    res.set("Content-Type", "text/plain");
+    res.send(combinedLogs);
   }
 });
 
