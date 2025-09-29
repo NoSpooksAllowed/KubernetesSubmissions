@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-insert-cron
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: psql-client
+              image: nomadxynta/psql_cron_job:1.0
+              envFrom:
+                - configMapRef:
+                    name: postgres-config
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: POSTGRES_PASSWORD
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  LINK=$(curl -Ls -w %{url_effective} -o /dev/null  https://en.wikipedia.org/wiki/Special:Random)
+                  MESSAGE="Read $LINK"
+                  echo "Generated message: $MESSAGE"
+                  psql -h postgres -U $POSTGRES_USER -d $POSTGRES_DB -c "INSERT INTO todos (text) VALUES ('$MESSAGE');"
+          restartPolicy: OnFailure
